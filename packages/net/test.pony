@@ -1,4 +1,5 @@
 use "ponytest"
+use "collections"
 
 actor Main is TestList
   new create(env: Env) => PonyTest(env, this)
@@ -6,6 +7,7 @@ actor Main is TestList
 
   fun tag tests(test: PonyTest) =>
     test(_TestBuffer)
+    test(_TestWriteBuffer)
     test(_TestBroadcast)
 
 class iso _TestBuffer is UnitTest
@@ -72,6 +74,27 @@ class iso _TestBuffer is UnitTest
 
     b.append(recover [as U8: '!', '\n'] end)
     h.assert_eq[String](b.line(), "hi!")
+
+class iso _TestWriteBuffer is UnitTest
+  """
+  Test adding to and reading from a WriteBuffer.
+  """
+  fun name(): String => "net/WriteBuffer"
+
+  fun apply(h: TestHelper) ? =>
+    let b = WriteBuffer
+
+    for i in Range(0, 10000) do
+      b.byte(U8.from[USize](i))
+    end
+
+    h.assert_eq[USize](10000, b.size())
+
+    let bytes = b.to_array()
+
+    for j in Range(0, 10000) do
+      h.assert_eq[U8](U8.from[USize](j), bytes(j))
+    end
 
 class _TestPing is UDPNotify
   let _mgr: _TestBroadcastMgr
