@@ -82,18 +82,30 @@ class iso _TestWriteBuffer is UnitTest
   fun name(): String => "net/WriteBuffer"
 
   fun apply(h: TestHelper) ? =>
-    let b = WriteBuffer
+    let wb = WriteBuffer
+    let wp = wb.get_write_buffer_point()
+
+    var wp2: (WriteBufferPoint | None) = None
 
     for i in Range(0, 10000) do
-      b.byte(U8.from[USize](i))
+      if (i == 2000) then
+        wp2 = wb.get_write_buffer_point()
+      end
+      wp.u8(U8.from[USize](i))
     end
 
-    h.assert_eq[USize](10000, b.size())
+    (wp2 as WriteBufferPoint).u8(42)
 
-    let bytes = b.to_array()
+    h.assert_eq[USize](10000, wb.size())
+
+    let bytes = wb.to_array()
 
     for j in Range(0, 10000) do
-      h.assert_eq[U8](U8.from[USize](j), bytes(j))
+      if (j == 2000) then
+        h.assert_eq[U8](U8(42), bytes(j), "at " + j.string() + " expected: " + U8(42).string() + " actual: " + bytes(j).string())
+      else
+        h.assert_eq[U8](U8.from[USize](j), bytes(j), "at " + j.string() + " expected: " + U8.from[USize](j).string() + " actual: " + bytes(j).string())
+      end
     end
 
 class _TestPing is UDPNotify
