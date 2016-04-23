@@ -1,5 +1,7 @@
 use "collections"
 
+type _ChunkNodeT is ListNode[(Array[U8] ref, USize)] ref
+
 class WriteBuffer
   let _chunks: List[(Array[U8] ref, USize)] = _chunks.create()
   var _length: USize = 0
@@ -39,44 +41,39 @@ class WriteBuffer
     end
     bytes
 
-  fun ref _byte(b: U8, loc: ((ListNode[(Array[U8] ref, USize)] ref, USize) | None)):
-    (ListNode[(Array[U8] ref, USize)] ref, USize) ?
-  =>
-    match loc
-    | (let node: ListNode[(Array[U8] ref, USize)] ref, let idx: USize) =>
-      let n: ListNode[(Array[U8] ref, USize)] ref  = (
-        if idx == _alloc_size then
-          if node.next() is None then
-            return _byte(b, None)
-          end
-          node.next() as ListNode[(Array[U8] ref, USize)] ref
-        else
-          node as ListNode[(Array[U8] ref, USize)] ref
-        end)
-      (let a, let used) = n()
-      a(idx) = b
-      if (n is _chunks.tail()) and ((idx + 1) > used) then
-        _current_array_idx = idx + 1
-        n.update((a, _current_array_idx))
-        _length = _length + 1
-      end
-      (n, idx + 1)
-    else
-      if _current_array_idx == _alloc_size then
-        _alloc()
-      end
-
-      _current_array(_current_array_idx) = b
-      _current_array_idx = _current_array_idx + 1
-      _chunks.tail().update((_current_array, _current_array_idx))
-      _length = _length + 1
-      (_chunks.tail(), _current_array_idx)
+  fun ref _byte(b: U8, node: _ChunkNodeT, idx: USize): (_ChunkNodeT, USize) ? =>
+    (_, let array_used) = node()
+    if (node is _chunks.tail()) and
+        ((idx == array_used) or (idx == _alloc_size)) then
+      return _byte_at_end(b)
     end
+
+    (let n: _ChunkNodeT, let i: USize)  = (
+      if (idx == _alloc_size) then
+        (node.next() as _ChunkNodeT, 0)
+      else
+        (node, idx)
+      end)
+
+    (let a, _) = n()
+    a(i) = b
+    (n, i + 1)
+
+  fun ref _byte_at_end(b: U8): (_ChunkNodeT, USize) ? =>
+    if _current_array_idx == _alloc_size then
+      _alloc()
+    end
+
+    _current_array(_current_array_idx) = b
+    _current_array_idx = _current_array_idx + 1
+    _chunks.tail().update((_current_array, _current_array_idx))
+    _length = _length + 1
+    (_chunks.tail(), _current_array_idx)
   
-  fun ref byte(b: U8, loc: ((ListNode[(Array[U8] ref, USize)] ref, USize) | None) = None):
-    (ListNode[(Array[U8] ref, USize)] ref, USize) ?
+  fun ref byte(b: U8, node: _ChunkNodeT, idx: USize):
+    (_ChunkNodeT, USize) ?
   =>
-    _byte(b, loc)
+    _byte(b, node, idx)
 
 interface IWriteBufferPoint
   fun ref _byte(b: U8): IWriteBufferPoint^ ?
@@ -108,7 +105,7 @@ class WriteBufferPoint
     _write_buffer = write_buffer
 
   fun ref _byte(b: U8): IWriteBufferPoint^ ? =>
-    (_node, _idx) = _write_buffer.byte(b, (_node, _idx))
+    (_node, _idx) = _write_buffer.byte(b, _node, _idx)
     this
 
   fun ref u8(value: U8): IWriteBufferPoint^ ? =>
