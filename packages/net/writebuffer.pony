@@ -21,15 +21,19 @@ class WriteBufferWritable
   fun size(): USize =>
     _length
 
-  fun ref to_array(): Array[U8] ref =>
+  fun ref to_array(): Array[U8] val =>
     let length: USize = _length
-    var bytes = Array[U8].undefined(length)
-    // let bytes = recover Array[U8].undefined(length) end
+    var bytes = recover Array[U8] end
 
     var dst_offset = USize(0)
 
     for (data, len) in _chunks.values() do
-      data.copy_to(bytes, 0, dst_offset, len)
+      // TODO: this look slow, how can i not do this?
+      for i in Range(0, len) do
+        try
+          bytes.push(data(i))
+        end
+      end
       dst_offset = dst_offset + len
     end
     bytes

@@ -137,14 +137,22 @@ class iso _TestWriteBufferWritable is UnitTest
     end
 
     let wbw2 = WriteBufferWritable
-    for k in Range(0, 10000) do
-      wbw2.u16_be(U16.from[USize](k))
-      wbw2.u32_be(U32.from[USize](k))
-      wbw2.u64_be(U64.from[USize](k))
-    end
+    wbw2.u16_be(0)
+    wbw2.u32_be(0)
+    wbw2.u64_be(0)
+    wbw2.u16_be(15, 0)
+    wbw2.u32_be(16, 2)
+    wbw2.u64_be(17, 6)
 
     let rb = Buffer
-    // rb.append(wbw.to_array())
+    rb.append(wbw2.to_array())
+
+    let a1 = rb.u16_be()
+    h.assert_eq[U16](15, a1)
+    let a2 = rb.u32_be()
+    h.assert_eq[U32](16, a2)
+    let a3 = rb.u64_be()
+    h.assert_eq[U64](17, a3)
 
 class _TestPing is UDPNotify
   let _mgr: _TestBroadcastMgr
