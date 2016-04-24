@@ -8,6 +8,7 @@ actor Main is TestList
   fun tag tests(test: PonyTest) =>
     test(_TestBuffer)
     test(_TestWriteBuffer)
+    test(_TestWriteBufferWritable)
     test(_TestBroadcast)
 
 class iso _TestBuffer is UnitTest
@@ -107,6 +108,43 @@ class iso _TestWriteBuffer is UnitTest
         h.assert_eq[U8](U8.from[USize](j), bytes(j), "at " + j.string() + " expected: " + U8.from[USize](j).string() + " actual: " + bytes(j).string())
       end
     end
+
+class iso _TestWriteBufferWritable is UnitTest
+  """
+  Test adding to and reading from a WriteBufferWritable.
+  """
+  fun name(): String => "net/WriteBufferWritable"
+
+  fun apply(h: TestHelper) ? =>
+    let wbw = WriteBufferWritable
+
+    for i in Range(0, 10000) do
+      wbw.u8(U8.from[USize](i))
+    end
+
+    wbw.u8(42, 2000)
+
+    h.assert_eq[USize](10000, wbw.size())
+
+    let bytes = wbw.to_array()
+
+    for j in Range(0, 10000) do
+      if (j == 2000) then
+        h.assert_eq[U8](U8(42), bytes(j), "at " + j.string() + " expected: " + U8(42).string() + " actual: " + bytes(j).string())
+      else
+        h.assert_eq[U8](U8.from[USize](j), bytes(j), "at " + j.string() + " expected: " + U8.from[USize](j).string() + " actual: " + bytes(j).string())
+      end
+    end
+
+    let wbw2 = WriteBufferWritable
+    for k in Range(0, 10000) do
+      wbw2.u16_be(U16.from[USize](k))
+      wbw2.u32_be(U32.from[USize](k))
+      wbw2.u64_be(U64.from[USize](k))
+    end
+
+    let rb = Buffer
+    // rb.append(wbw.to_array())
 
 class _TestPing is UDPNotify
   let _mgr: _TestBroadcastMgr
