@@ -188,6 +188,15 @@ static void make_prototype(compile_t* c, reach_type_t* t,
     m->func = codegen_addfun(c, m->full_name, m->func_type);
     genfun_param_attrs(t, m, m->func);
     make_function_debug(c, t, m, m->func);
+
+    /* if(m->exported) { */
+    /*   printf("generating prototype for '%s'\n", m->exported_name); */
+    /*   m->wrapper = codegen_addfun(c, m->exported_name, m->func_type); */
+    /*   genfun_param_attrs(t, m, m->wrapper); */
+    /*   make_function_debug(c, t, m, m->wrapper); */
+    /*   LLVMSetFunctionCallConv(m->wrapper, LLVMCCallConv); */
+    /*   LLVMSetLinkage(m->wrapper, LLVMExternalLinkage); */
+    /* } */
   }
 
   // If not partial, add nounwind.
@@ -607,6 +616,40 @@ static bool genfun_forward(compile_t* c, reach_type_t* t,
   return true;
 }
 
+static bool genfun_wrapper(compile_t* c, reach_method_t* m)
+{
+  assert(m->func != NULL);
+
+  AST_GET_CHILDREN(m->r_fun, cap, id, typeparams, params, result, can_error,
+    body);
+
+  m->wrapper = codegen_addfun(c, m->exported_name, m->func_type);
+  codegen_startfun(c, m->wrapper, m->di_file, m->di_method);
+  
+  int count = LLVMCountParams(m->wrapper);
+  size_t buf_size = count * sizeof(LLVMValueRef);
+
+  LLVMValueRef* args = (LLVMValueRef*)ponyint_pool_alloc_size(buf_size);
+  args[0] = LLVMGetParam(m->wrapper, 0);
+
+  for(int i = 1; i < count; i++)
+  {
+    args[i] = LLVMGetParam(m->wrapper, i);
+  }
+
+  LLVMValueRef ret = codegen_call(c, m->func, args, count);
+
+  assert(ret != NULL);
+
+  LLVMBuildRet(c->builder, ret);
+  codegen_finishfun(c);
+
+  LLVMSetFunctionCallConv(m->wrapper, LLVMCCallConv);
+  LLVMSetLinkage(m->wrapper, LLVMExternalLinkage);
+
+  return true;
+}
+
 void genfun_param_attrs(reach_type_t* t, reach_method_t* m, LLVMValueRef fun)
 {
   LLVMValueRef param = LLVMGetFirstParam(fun);
@@ -742,6 +785,13 @@ bool genfun_method_bodies(compile_t* c, reach_type_t* t)
         }
       }
     }
+
+    size_t k = HASHMAP_BEGIN;
+    while((m = reach_methods_next(&n->r_methods, &k)) != NULL)
+    {
+      if(m->exported && !genfun_wrapper(c, m))
+        return false;
+    }      
   }
 
   return true;

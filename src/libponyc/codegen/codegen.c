@@ -1,5 +1,6 @@
 #include "codegen.h"
 #include "genlib.h"
+#include "genexport.h"
 #include "genexe.h"
 #include "genprim.h"
 #include "genname.h"
@@ -714,8 +715,13 @@ bool codegen(ast_t* program, pass_opt_t* opt)
 
   if(c.opt->library)
     ok = genlib(&c, program);
-  else
-    ok = genexe(&c, program);
+  else {
+    if (c.opt->export_methods)
+      ok = genexport(&c, program);
+    else
+      ok = true;
+    ok &= genexe(&c, program);
+  }
 
   codegen_cleanup(&c);
   return ok;
