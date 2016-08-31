@@ -623,6 +623,7 @@ static bool genfun_wrapper(compile_t* c, reach_method_t* m)
   AST_GET_CHILDREN(m->r_fun, cap, id, typeparams, params, result, can_error,
     body);
 
+  printf("Exporting wrapper '%s'\n", m->exported_name);
   m->wrapper = codegen_addfun(c, m->exported_name, m->func_type);
   codegen_startfun(c, m->wrapper, m->di_file, m->di_method);
   
@@ -646,6 +647,8 @@ static bool genfun_wrapper(compile_t* c, reach_method_t* m)
 
   LLVMSetFunctionCallConv(m->wrapper, LLVMCCallConv);
   LLVMSetLinkage(m->wrapper, LLVMExternalLinkage);
+  LLVMAddFunctionAttr(m->wrapper, LLVMNoInlineAttribute);
+  LLVMAddFunctionAttr2(m->wrapper, LLVMOptimizeNoneAttribute);
 
   return true;
 }

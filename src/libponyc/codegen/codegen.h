@@ -33,6 +33,7 @@ void LLVMSetInaccessibleMemOrArgMemOnly(LLVMValueRef fun);
 LLVMValueRef LLVMConstNaN(LLVMTypeRef type);
 LLVMModuleRef LLVMParseIRFileInContext(LLVMContextRef ctx, const char* file);
 void LLVMSetMetadataStr(LLVMValueRef val, const char* str, LLVMValueRef node);
+#define LLVMOptimizeNoneAttribute (uint64_t)(1ULL << 42)
 
 // Intrinsics.
 LLVMValueRef LLVMMemcpy(LLVMModuleRef module, bool ilp32);
@@ -40,6 +41,7 @@ LLVMValueRef LLVMMemmove(LLVMModuleRef module, bool ilp32);
 LLVMValueRef LLVMLifetimeStart(LLVMModuleRef module);
 LLVMValueRef LLVMLifetimeEnd(LLVMModuleRef module);
 LLVMValueRef LLVMInvariantStart(LLVMModuleRef module);
+void LLVMAddFunctionAttr2(LLVMValueRef func, uint64_t attr);
 
 #define GEN_NOVALUE ((LLVMValueRef)1)
 

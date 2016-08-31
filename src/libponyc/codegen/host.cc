@@ -187,3 +187,14 @@ LLVMValueRef LLVMInvariantStart(LLVMModuleRef module)
 
   return wrap(Intrinsic::getDeclaration(m, Intrinsic::invariant_start, {}));
 }
+
+void LLVMAddFunctionAttr2(LLVMValueRef func, uint64_t attr)
+{
+  Function *f = unwrap<Function>(func);
+  const AttributeSet PAL = f->getAttributes();
+  AttrBuilder b(attr);
+  const AttributeSet PALnew =
+    PAL.addAttributes(f->getContext(), AttributeSet::FunctionIndex,
+                      AttributeSet::get(f->getContext(), AttributeSet::FunctionIndex, b));
+  f->setAttributes(PALnew);
+}
