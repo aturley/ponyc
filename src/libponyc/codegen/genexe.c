@@ -5,6 +5,7 @@
 #include "genname.h"
 #include "genprim.h"
 #include "genopt.h"
+#include "genheader.h"
 #include "../reach/paint.h"
 #include "../pkg/package.h"
 #include "../pkg/program.h"
