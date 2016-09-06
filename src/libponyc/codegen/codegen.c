@@ -8,6 +8,7 @@
 #include "gencall.h"
 #include "genopt.h"
 #include "gentype.h"
+#include "genheader.h"
 #include "../pkg/package.h"
 #include "../../libponyrt/mem/heap.h"
 #include "../../libponyrt/mem/pool.h"
@@ -711,16 +712,22 @@ bool codegen(ast_t* program, pass_opt_t* opt)
   init_runtime(&c);
   genprim_reachable_init(&c, program);
 
-  bool ok;
-
-  if(c.opt->library)
-    ok = genlib(&c, program);
-  else {
-    if (c.opt->export_methods)
-      ok = genexport(&c, program);
-    else
-      ok = true;
-    ok &= genexe(&c, program);
+  //
+  // this should generate the file if the export flag is there,
+  //
+  bool ok = true;
+  if(c.opt->library) 
+    ok = genexport(&c, program);
+  else 
+    ok = genexe(&c, program);
+  
+  //
+  // regardless if a library or executable,
+  // figure out if I have some exported headers
+  //
+  if ( c.opt->export_methods ) 
+  {  
+    ok &=genheader(&c);
   }
 
   codegen_cleanup(&c);
