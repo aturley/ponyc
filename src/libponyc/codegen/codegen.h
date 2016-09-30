@@ -128,6 +128,9 @@ typedef struct compile_t
   const char* str__init;
   const char* str__final;
   const char* str__event_notify;
+  const char* str__serialise_space;
+  const char* str__serialise;
+  const char* str__deserialise;
 
   LLVMCallConv callconv;
   LLVMLinkage linkage;
@@ -168,6 +171,7 @@ typedef struct compile_t
   LLVMTypeRef dispatch_type;
   LLVMTypeRef dispatch_fn;
   LLVMTypeRef final_fn;
+  LLVMTypeRef custom_serialise_space_fn;
 
   LLVMValueRef personality;
 

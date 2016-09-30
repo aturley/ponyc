@@ -3,6 +3,7 @@
 #include "../lang/lang.h"
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 #define HIGH_BIT ((size_t)1 << ((sizeof(size_t) * 8) - 1))
 
@@ -95,6 +96,12 @@ void ponyint_serialise_object(pony_ctx_t* ctx, void* p, pony_type_t* t,
 
     ponyint_serialise_put(&ctx->serialise, s);
     ctx->serialise_size += t->size;
+
+    if(t->serialise_space)
+    {
+      // printf("do something with serialise_space (%zu)\n", t->serialise_space(p));
+      ctx->serialise_size += t->serialise_space(p);
+    }
   }
 
   // Set (or update) mutability.

@@ -1469,6 +1469,132 @@ static bool check_finaliser(pass_opt_t* opt, ast_t* ast)
   return ok;
 }
 
+static bool check_serialise_space(pass_opt_t* opt, ast_t* ast)
+{
+  AST_GET_CHILDREN(ast, cap, id, typeparams, params, result, can_error, body);
+
+  if(strcmp(ast_name(id), "_serialise_space"))
+    return true;
+
+  bool ok = true;
+
+  if(ast_id(ast) != TK_FUN)
+  {
+    ast_error(opt->check.errors, ast, "_serialise_space must be a function");
+    ok = false;
+  }
+
+  if(ast_id(cap) != TK_BOX)
+  {
+    ast_error(opt->check.errors, cap, "_serialise_space must be box");
+    ok = false;
+  }
+
+  if(ast_id(typeparams) != TK_NONE)
+  {
+    ast_error(opt->check.errors, typeparams, "_serialise_space must not be polymorphic");
+    ok = false;
+  }
+
+  if(ast_childcount(params) != 0)
+  {
+    ast_error(opt->check.errors, params, "_serialise_space must have no parameters");
+    ok = false;
+  }
+
+  if(!is_literal(result, "USize"))
+  {
+    ast_error(opt->check.errors, result, "_serialise_space must return USize");
+    ok = false;
+  }
+
+  return ok;
+}
+
+static bool check_serialiser(pass_opt_t* opt, ast_t* ast)
+{
+  AST_GET_CHILDREN(ast, cap, id, typeparams, params, result, can_error, body);
+
+  if(strcmp(ast_name(id), "_serialise"))
+    return true;
+
+  bool ok = true;
+
+  if(ast_id(ast) != TK_FUN)
+  {
+    ast_error(opt->check.errors, ast, "_serialise must be a function");
+    ok = false;
+  }
+
+  if(ast_id(cap) != TK_BOX)
+  {
+    ast_error(opt->check.errors, cap, "_serialise must be box");
+    ok = false;
+  }
+
+  if(ast_id(typeparams) != TK_NONE)
+  {
+    ast_error(opt->check.errors, typeparams, "_serialise must not be polymorphic");
+    ok = false;
+  }
+
+  if(ast_childcount(params) != 1)
+  {
+    ast_error(opt->check.errors, params, "_serialise must have one parameter");
+    ok = false;
+  }
+
+  if(!is_none(result))
+  {
+    ast_error(opt->check.errors, result, "_serialise must return None");
+    ok = false;
+  }
+
+  return ok;
+}
+
+static bool check_deserialiser(pass_opt_t* opt, ast_t* ast)
+{
+  AST_GET_CHILDREN(ast, cap, id, typeparams, params, result, can_error, body);
+
+  if(strcmp(ast_name(id), "_deserialise"))
+    return true;
+
+  bool ok = true;
+
+  if(ast_id(ast) != TK_FUN)
+  {
+    ast_error(opt->check.errors, ast, "_deserialise must be a function");
+    ok = false;
+  }
+
+  if(ast_id(cap) != TK_BOX)
+  {
+    ast_error(opt->check.errors, cap, "_deserialise must be box");
+    ok = false;
+  }
+
+  if(ast_id(typeparams) != TK_NONE)
+  {
+    ast_error(opt->check.errors, typeparams, "_deserialise must not be polymorphic");
+    ok = false;
+  }
+
+  if(ast_childcount(params) != 1)
+  {
+    ast_error(opt->check.errors, params, "_deserialise must have one parameter");
+    ok = false;
+  }
+
+  if(!is_none(result))
+  {
+    ast_error(opt->check.errors, result, "_deserialise must return None");
+    ok = false;
+  }
+
+  return ok;
+}
+
 bool expr_fun(pass_opt_t* opt, ast_t* ast)
 {
   typecheck_t* t = &opt->check;
@@ -1521,6 +1647,11 @@ bool expr_fun(pass_opt_t* opt, ast_t* ast)
   }
 
   if(!check_primitive_init(opt, ast) || !check_finaliser(opt, ast))
+    return false;
+
+
+  if (!check_serialise_space(opt, ast) || !check_serialiser(opt, ast) ||
+      !check_deserialiser(opt, ast))
     return false;
 
   if(!check_main_create(opt, ast))
