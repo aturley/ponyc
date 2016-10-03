@@ -214,6 +214,13 @@ static void init_runtime(compile_t* c)
   c->custom_serialise_space_fn = LLVMPointerType(
     LLVMFunctionType(c->i64, params, 1, false), 0);
 
+  // custom_deserialise
+  // void (*)(__object*, void*)
+  params[0] = c->object_ptr;
+  params[1] = c->void_ptr;
+  c->custom_deserialise_fn = LLVMPointerType(
+    LLVMFunctionType(c->void_type, params, 2, false), 0);
+
   // dispatch
   // void (*)(i8*, __object*, $message*)
   params[0] = c->void_ptr;

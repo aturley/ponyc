@@ -97,10 +97,9 @@ void ponyint_serialise_object(pony_ctx_t* ctx, void* p, pony_type_t* t,
     ponyint_serialise_put(&ctx->serialise, s);
     ctx->serialise_size += t->size;
 
-    if(t->serialise_space)
+    if(t->custom_serialise_space)
     {
-      // printf("do something with serialise_space (%zu)\n", t->serialise_space(p));
-      ctx->serialise_size += t->serialise_space(p);
+      ctx->serialise_size += t->custom_serialise_space(p);
     }
   }
 
@@ -241,6 +240,14 @@ void* pony_deserialise_offset(pony_ctx_t* ctx, pony_type_t* t,
   // Allocate the object, memcpy to it.
   void* object = pony_alloc(ctx, t->size);
   memcpy(object, (void*)((uintptr_t)ctx->serialise_buffer + offset), t->size);
+
+  printf("checking custom deserialisation here\n");
+  if(t->custom_deserialise)
+  {
+    printf("do custom deserialisation here\n");
+    t->custom_deserialise(object,
+      (void*)((uintptr_t)ctx->serialise_buffer + offset + t->size));
+  }
 
   // Store a mapping of offset to object.
   s = POOL_ALLOC(serialise_t);

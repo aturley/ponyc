@@ -172,6 +172,7 @@ typedef struct compile_t
   LLVMTypeRef dispatch_fn;
   LLVMTypeRef final_fn;
   LLVMTypeRef custom_serialise_space_fn;
+  LLVMTypeRef custom_deserialise_fn;
 
   LLVMValueRef personality;
 
