@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #define HIGH_BIT ((size_t)1 << ((sizeof(size_t) * 8) - 1))
+#define ALL_BITS ((size_t)(~0))
 
 PONY_EXTERN_C_BEGIN
 
@@ -68,15 +69,6 @@ static void serialise_cleanup(pony_ctx_t* ctx)
 void ponyint_serialise_object(pony_ctx_t* ctx, void* p, pony_type_t* t,
   int mutability)
 {
-  if(t->serialise == NULL)
-  {
-    // A type without a serialisation function raises an error.
-    // This applies to Pointer[A] and MaybePointer[A].
-    serialise_cleanup(ctx);
-    pony_throw();
-    return;
-  }
-
   serialise_t k;
   k.key = (uintptr_t)p;
   serialise_t* s = ponyint_serialise_get(&ctx->serialise, &k);
@@ -148,7 +140,12 @@ size_t pony_serialise_offset(pony_ctx_t* ctx, void* p)
 
   // If we are in the map, return the offset.
   if(s != NULL)
-    return s->value;
+  {
+    if(s->t->serialise != NULL)
+      return s->value;
+    else
+      return ALL_BITS;
+  }
 
   // If we are not in the map, we are an untraced primitive. Return the type id
   // with the high bit set.
@@ -177,7 +174,7 @@ void pony_serialise(pony_ctx_t* ctx, void* p, void* out)
 
   while((s = ponyint_serialise_next(&ctx->serialise, &i)) != NULL)
   {
-    if(s->t != NULL)
+    if(s->t != NULL && s->t->serialise != NULL)
       s->t->serialise(ctx, (void*)s->key, r->ptr, s->value, s->mutability);
   }
 
@@ -187,6 +184,11 @@ void pony_serialise(pony_ctx_t* ctx, void* p, void* out)
 void* pony_deserialise_offset(pony_ctx_t* ctx, pony_type_t* t,
   uintptr_t offset)
 {
+  // if all the bits of the offset are set, it is either a Pointer[A] a or a
+  // MaybePointer[A].
+  if(offset == ALL_BITS)
+    return NULL;
+
   // If the high bit of the offset is set, it is either an unserialised
   // primitive, or an unserialised field in an opaque object.
   if((offset & HIGH_BIT) != 0)
@@ -241,10 +243,8 @@ void* pony_deserialise_offset(pony_ctx_t* ctx, pony_type_t* t,
   void* object = pony_alloc(ctx, t->size);
   memcpy(object, (void*)((uintptr_t)ctx->serialise_buffer + offset), t->size);
 
-  printf("checking custom deserialisation here\n");
   if(t->custom_deserialise)
   {
-    printf("do custom deserialisation here\n");
     t->custom_deserialise(object,
       (void*)((uintptr_t)ctx->serialise_buffer + offset + t->size));
   }
