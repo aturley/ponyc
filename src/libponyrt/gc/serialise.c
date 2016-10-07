@@ -29,6 +29,7 @@ struct serialise_t
   uintptr_t value;
   pony_type_t* t;
   int mutability;
+  bool block;
 };
 
 static size_t serialise_hash(serialise_t* p)
@@ -85,6 +86,7 @@ void ponyint_serialise_object(pony_ctx_t* ctx, void* p, pony_type_t* t,
     s->key = (uintptr_t)p;
     s->value = ctx->serialise_size;
     s->t = t;
+    s->block = false;
 
     ponyint_serialise_put(&ctx->serialise, s);
     ctx->serialise_size += t->size;
@@ -127,6 +129,7 @@ void pony_serialise_reserve(pony_ctx_t* ctx, void* p, size_t size)
   s->value = ctx->serialise_size;
   s->t = NULL;
   s->mutability = PONY_TRACE_OPAQUE;
+  s->block = true;
 
   ponyint_serialise_put(&ctx->serialise, s);
   ctx->serialise_size += size;
@@ -141,7 +144,7 @@ size_t pony_serialise_offset(pony_ctx_t* ctx, void* p)
   // If we are in the map, return the offset.
   if(s != NULL)
   {
-    if(s->t->serialise != NULL)
+    if(s->t != NULL || s->block)
       return s->value;
     else
       return ALL_BITS;
@@ -174,7 +177,7 @@ void pony_serialise(pony_ctx_t* ctx, void* p, void* out)
 
   while((s = ponyint_serialise_next(&ctx->serialise, &i)) != NULL)
   {
-    if(s->t != NULL && s->t->serialise != NULL)
+    if(!(s->block) && s->t != NULL && s->t->serialise != NULL)
       s->t->serialise(ctx, (void*)s->key, r->ptr, s->value, s->mutability);
   }
 
