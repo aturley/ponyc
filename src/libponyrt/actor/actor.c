@@ -218,7 +218,7 @@ bool ponyint_actor_run(pony_ctx_t* ctx, pony_actor_t* actor, size_t batch)
   pony_msg_t* head = atomic_load_explicit(&actor->q.head, memory_order_relaxed);
 
   while((msg = ponyint_actor_messageq_pop(&actor->q
-#ifdef USE_DYNAMIC_TRACE    
+#ifdef USE_DYNAMIC_TRACE
     , ctx->scheduler, ctx->current
 #endif
     )) != NULL)
@@ -507,7 +507,7 @@ PONY_API void pony_sendv(pony_ctx_t* ctx, pony_actor_t* to, pony_msg_t* first,
     ponyint_maybe_mute(ctx, to);
 
   if(ponyint_actor_messageq_push(&to->q, first, last
-#ifdef USE_DYNAMIC_TRACE 
+#ifdef USE_DYNAMIC_TRACE
     , ctx->scheduler, ctx->current, to
 #endif
     ))
@@ -812,4 +812,11 @@ void ponyint_unmute_actor(pony_actor_t* actor)
   uint8_t is_muted = atomic_fetch_sub_explicit(&actor->is_muted, 1, memory_order_relaxed);
   pony_assert(is_muted == 1);
   (void)is_muted;
+}
+
+// Thread magic
+
+PONY_API int32_t pony_scheduler_index(pony_ctx_t* ctx)
+{
+  return ctx->scheduler->index;
 }
