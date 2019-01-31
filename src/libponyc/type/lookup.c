@@ -180,6 +180,8 @@ static deferred_reification_t* lookup_nominal(pass_opt_t* opt, ast_t* from,
         return NULL;
     }
 
+    // Need to have something similar to what is done here for
+    // "_final" to make sure that "_deschedule" isn't looked up.
     if(name == stringtab("_final"))
     {
       switch(ast_id(find))

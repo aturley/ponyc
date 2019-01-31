@@ -162,6 +162,7 @@ typedef struct compile_t
   const char* str__serialise_space;
   const char* str__serialise;
   const char* str__deserialise;
+  // need entry for str__reschedule
 
   uint32_t trait_bitmap_size;
 

@@ -23,6 +23,7 @@
 #define DESC_CUSTOM_DESERIALISE 10
 #define DESC_DISPATCH 11
 #define DESC_FINALISE 12
+// need to add DESCHEDULE
 #define DESC_EVENT_NOTIFY 13
 #define DESC_TRAITS 14
 #define DESC_FIELDS 15
@@ -342,6 +343,7 @@ void gendesc_basetype(compile_t* c, LLVMTypeRef desc_type)
   params[DESC_CUSTOM_DESERIALISE] = c->custom_deserialise_fn;
   params[DESC_DISPATCH] = c->dispatch_fn;
   params[DESC_FINALISE] = c->final_fn;
+  // need to add something for DESC_DESCHEDULE
   params[DESC_EVENT_NOTIFY] = c->i32;
   params[DESC_TRAITS] = LLVMPointerType(
     LLVMArrayType(c->intptr, 0), 0);

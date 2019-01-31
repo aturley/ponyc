@@ -170,6 +170,7 @@ static void init_runtime(compile_t* c)
   c->str__serialise_space = stringtab("_serialise_space");
   c->str__serialise = stringtab("_serialise");
   c->str__deserialise = stringtab("_deserialise");
+  // add entry for descheduler
 
   LLVMTypeRef type;
   LLVMTypeRef params[5];
@@ -245,6 +246,8 @@ static void init_runtime(compile_t* c)
   params[0] = c->object_ptr;
   c->final_fn = LLVMPointerType(
     LLVMFunctionType(c->void_type, params, 1, false), 0);
+
+  // add entry for descheduler
 
   // descriptor, opaque version
   // We need this in order to build our own structure.

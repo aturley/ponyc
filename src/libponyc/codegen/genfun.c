@@ -132,6 +132,8 @@ static void make_signature(compile_t* c, reach_type_t* t,
   // Class constructors return void to avoid clobbering nocapture information.
   if(bare_void || (n->name == c->str__final) ||
     ((ast_id(m->fun->ast) == TK_NEW) && (t->underlying == TK_CLASS)))
+    // I think we want to do this in the case of the descheduler as
+    // well, but I'm not certain.
     c_m->func_type = LLVMFunctionType(c->void_type, tparams, (int)count, false);
   else
     c_m->func_type = LLVMFunctionType(
@@ -312,6 +314,7 @@ static void make_prototype(compile_t* c, reach_type_t* t,
     LLVMSetFunctionCallConv(c_m->func, LLVMCCallConv);
     LLVMSetLinkage(c_m->func, LLVMExternalLinkage);
   }
+  // need to handle the descheduler in the above code
 
   if(n->cap == TK_AT)
   {

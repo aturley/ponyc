@@ -170,6 +170,7 @@ creating actors or sending messages.
 Within finalisers uses the data field of the top body node and any TK_CALL
 nodes as ast_send flags.
 
+ADD INFORMATION ABOUT DESCHEDULER PASS
 
 * Adding a new pass
 
@@ -220,6 +221,7 @@ typedef enum pass_id
   PASS_EXPR,
   PASS_VERIFY,
   PASS_FINALISER,
+  // PASS_DESCHEDULER
   PASS_SERIALISER,
   PASS_REACH,
   PASS_PAINT,

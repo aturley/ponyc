@@ -191,6 +191,8 @@ static int check_body_send(ast_t* ast, bool in_final)
   return r;
 }
 
+// Need entity_descheduler, something like
+// entity_finaliser. descheduler must be a function.
 static bool entity_finaliser(pass_opt_t* opt, ast_t* entity, const char* final)
 {
   ast_t* ast = ast_get(entity, final, NULL);
@@ -215,6 +217,8 @@ static bool entity_finaliser(pass_opt_t* opt, ast_t* entity, const char* final)
   return true;
 }
 
+// Need module_descheduler, something like
+// module_finaliser. deschedulers can only be put on actors.
 static bool module_finalisers(pass_opt_t* opt, ast_t* module,
   const char* final)
 {
@@ -242,6 +246,7 @@ static bool module_finalisers(pass_opt_t* opt, ast_t* module,
   return ok;
 }
 
+// Need package_descheduler, something like package_finaliser
 static bool package_finalisers(pass_opt_t* opt, ast_t* package,
   const char* final)
 {
@@ -259,6 +264,7 @@ static bool package_finalisers(pass_opt_t* opt, ast_t* package,
   return ok;
 }
 
+// Need pass_descheduler, something like pass_finaliser
 bool pass_finalisers(ast_t* program, pass_opt_t* options)
 {
   ast_t* package = ast_child(program);

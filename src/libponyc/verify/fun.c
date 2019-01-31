@@ -129,6 +129,14 @@ static bool verify_primitive_init(pass_opt_t* opt, ast_t* ast)
   return ok;
 }
 
+// DESCHEDULE_SPIKE need to have a verify_any_deschedule function
+// similar to verify_any_final. method must:
+// * not be on a struct
+// * be a function
+// * not take any parameters
+// * return none
+// * not be partial
+
 static bool verify_any_final(pass_opt_t* opt, ast_t* ast)
 {
   AST_GET_CHILDREN(ast, cap, id, typeparams, params, result, can_error, body);
@@ -370,6 +378,7 @@ bool verify_fun(pass_opt_t* opt, ast_t* ast)
     !verify_primitive_init(opt, ast) ||
     !verify_any_final(opt, ast) ||
     !verify_any_serialise(opt, ast))
+    // !verify_any_deschedule(opt, ast)
     return false;
 
   // Check partial functions.

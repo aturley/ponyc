@@ -11,6 +11,7 @@
 #include "verify.h"
 #include "finalisers.h"
 #include "serialisers.h"
+// #include "deschedulers.h"
 #include "docgen.h"
 #include "../ast/ast.h"
 #include "../ast/parser.h"
@@ -62,6 +63,7 @@ const char* pass_name(pass_id pass)
     case PASS_EXPR: return "expr";
     case PASS_VERIFY: return "verify";
     case PASS_FINALISER: return "final";
+      // need to have PASS_FINALIZER
     case PASS_SERIALISER: return "serialise";
     case PASS_REACH: return "reach";
     case PASS_PAINT: return "paint";
@@ -277,6 +279,8 @@ static bool ast_passes(ast_t** astp, pass_opt_t* options, pass_id last)
 
   if(is_program)
     plugin_visit_ast(*astp, options, PASS_VERIFY);
+
+  // need same lines for deschedulers as we have here for finalizers
 
   if(!check_limit(astp, options, PASS_FINALISER, last))
     return true;
