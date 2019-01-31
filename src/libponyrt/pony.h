@@ -123,6 +123,8 @@ typedef void (*pony_dispatch_fn)(pony_ctx_t* ctx, pony_actor_t* actor,
  */
 typedef void (*pony_final_fn)(void* p);
 
+// Need to add a type for the deschedule function
+
 /** Partial function.
  *
  * A callback for the pony_try() function, which is allowed to raise errors.
@@ -145,6 +147,9 @@ typedef const struct _pony_type_t
   pony_custom_deserialise_fn custom_deserialise;
   pony_dispatch_fn dispatch;
   pony_final_fn final;
+  // Need to add an entry somewhere here for the deschedule
+  // function. This function should be at the position given by
+  // DESC_DESCEDULE in libponyc/codegen/gendesc.c
   uint32_t event_notify;
   uintptr_t** traits;
   void* fields;
