@@ -262,6 +262,8 @@ bool ponyint_actor_run(pony_ctx_t* ctx, pony_actor_t* actor, size_t batch)
   // If we have been scheduled, the head will not be marked as empty.
   pony_msg_t* head = atomic_load_explicit(&actor->q.head, memory_order_relaxed);
 
+  bool hit_batch_size = false;
+
   while((msg = ponyint_actor_messageq_pop(&actor->q
 #ifdef USE_DYNAMIC_TRACE
     , ctx->scheduler, ctx->current
@@ -294,8 +296,7 @@ bool ponyint_actor_run(pony_ctx_t* ctx, pony_actor_t* actor, size_t batch)
       //   it won't be rescheduled.
       if(atomic_load_explicit(&actor->muted, memory_order_relaxed) > 0)
       {
-        ponyint_mute_actor(actor);
-        return false;
+        break;
       }
 
       if(app == batch)
@@ -308,7 +309,9 @@ bool ponyint_actor_run(pony_ctx_t* ctx, pony_actor_t* actor, size_t batch)
           ponyint_actor_setoverloaded(actor);
         }
 
-        return !has_flag(actor, FLAG_UNSCHEDULED);
+        hit_batch_size = true;
+        break;
+        // return !has_flag(actor, FLAG_UNSCHEDULED);
       }
     }
 
@@ -316,6 +319,24 @@ bool ponyint_actor_run(pony_ctx_t* ctx, pony_actor_t* actor, size_t batch)
     // scheduled.
     if(msg == head)
       break;
+  }
+
+  // run actor->deschedule_fn HERE
+
+  // need to GC after deschedule
+  try_gc(ctx, actor);
+
+  // check to see if we should mute after running deschedule, return
+  // if muted
+  if(atomic_load_explicit(&actor->muted, memory_order_relaxed) > 0)
+  {
+    ponyint_mute_actor(actor);
+    return false;
+  }
+
+  if(hit_batch_size)
+  {
+    return !has_flag(actor, FLAG_UNSCHEDULED);
   }
 
   // We didn't hit our app message batch limit. We now believe our queue to be
@@ -332,8 +353,6 @@ bool ponyint_actor_run(pony_ctx_t* ctx, pony_actor_t* actor, size_t batch)
     //    the receiver be overloaded or muted
     ponyint_actor_unsetoverloaded(actor);
   }
-
-  try_gc(ctx, actor);
 
   if(has_flag(actor, FLAG_UNSCHEDULED))
   {
